@@ -10,7 +10,7 @@ from database import SessionLocal, engine, Base
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Coffee Machine Portal API")
+app = FastAPI(title="Caffeineer API")
 
 # Setup CORS for the React frontend
 app.add_middleware(

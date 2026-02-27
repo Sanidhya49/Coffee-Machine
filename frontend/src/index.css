@@ -1,7 +1,61 @@
 @import "tailwindcss";
 
+@theme {
+  --color-coffee-50: #F3F2F1;
+  --color-coffee-100: #E6E2DE;
+  --color-coffee-200: #D5CEC4;
+  --color-coffee-300: #B7A89A;
+  --color-coffee-400: #938070;
+  --color-coffee-500: #7C6656;
+  --color-coffee-600: #6A5648;
+  --color-coffee-700: #5C4A3D;
+  --color-coffee-800: #4A3B32;
+  --color-coffee-900: #3A2E27;
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 font-sans;
+    background-color: var(--color-coffee-50);
+    color: var(--color-coffee-800);
+    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out forwards;
+  }
+
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

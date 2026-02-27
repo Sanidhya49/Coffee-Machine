@@ -1,68 +1,50 @@
-# Coffee Machine Management & Approval Portal
+# Coffee Machine Approval Portal
 
-A full-stack application for managing and approving an inventory of coffee machines.
+A full-stack approval and inventory management system for a premium coffee machine fleet. Built with a React frontend and a FastAPI (Python) backend using SQLite.
 
-## Architecture
+## How it Works
 
-This project is divided into two distinct parts:
-1. **Backend (FastAPI, SQLite, SQLAlchemy)**: Provides a robust RESTful API and handles database interactions.
-2. **Frontend (React, Vite, Tailwind CSS)**: A modern, highly responsive UI simulating different user roles for a multi-tier approval workflow.
+The portal allows users to manage a fleet of coffee machines (Espresso, Drip, Pour Over, Pod, etc.) through a strict two-level approval process before they go live in the main inventory.
 
-### User Roles & Workflow
-* **L1 Reviewer**: Edits newly added machines (status: "New") and escalates them (status: "Pending Level 2").
-* **L2 Reviewer**: Reviews escalated machines and formally approves or rejects them.
-* **Administrator**: Can add new machines to the system and has visibility/bypass over all actions.
+**The Three Roles:**
+- **L1 Reviewer:** Can add new machines and edit existing ones. Any changes they make go into a "Pending Level 2" state. They can also request to delete machines, or directly delete rejected ones.
+- **L2 Reviewer:** The approvers. They review changes or deletion requests made by L1. They can approve (publishing the changes) or reject them. They can also permanently delete rejected machines.
+- **Admin:** Has all the permissions of both L1 and L2 combined.
 
----
+## Tech Stack Overview
 
-## Getting Started
+### Frontend
+- **React + Vite:** For a fast, modern single-page application experience.
+- **Tailwind CSS:** Used heavily for custom, responsive, and aesthetic styling. We built a custom "Coffee" color palette in the config to give the app a premium look.
+- **React Router:** For handling navigation between the Dashboard, Add Machine, Compare, and Review pages.
+- **Lucide React:** For clean, consistent iconography.
 
-### 1. Structure
-* `/backend`: FastAPI Python application
-* `/frontend`: React application created with Vite
+### Backend
+- **FastAPI:** A modern Python framework for building APIs quickly.
+- **SQLAlchemy:** The ORM used to interact with the database using Python objects instead of raw SQL.
+- **SQLite:** A lightweight database stored locally (in `coffee_machines.db`) for easy setup without needing a separate server.
+- **Uvicorn:** The ASGI web server used to run the FastAPI app.
 
-### 2. Running the Backend
+## Running the Project
 
-Open a terminal and navigate to the backend directory:
-```bash
-cd backend
-```
+You need two terminal windows open to run this application locally.
 
-**Setup Virtual Environment & Install Dependencies:**
-```bash
-python -m venv venv
-# On Windows:
-.\venv\Scripts\activate
-# On Mac/Linux:
-source venv/bin/activate
+### 1. Start the Backend (API)
+1. Open a terminal and navigate to the `backend` folder.
+2. Install the requirements: `pip install -r requirements.txt`
+3. Run the server: `uvicorn main:app --reload`
+*The API will start running on `http://127.0.0.1:8000`*
 
-pip install -r requirements.txt
-```
+### 2. Start the Frontend (UI)
+1. Open a second terminal and navigate to the `frontend` folder.
+2. Install dependencies: `npm install`
+3. Run the dev server: `npm run dev`
+*The React app will usually start on `http://localhost:5173`*
 
-**Run the FastAPI Server:**
-```bash
-uvicorn main:app --reload
-```
-* Note: The seeding script runs automatically on startup. The first time the backend boots, it will populate the SQLite database with 30 realistic mock coffee machines.
-* The API will be available at `http://localhost:8000`. Test the docs at `http://localhost:8000/docs`.
+## Features
 
-### 3. Running the Frontend
-
-Open a **separate** terminal and navigate to the frontend directory:
-```bash
-cd frontend
-```
-
-**Install Dependencies:**
-```bash
-npm install
-```
-
-**Start the React Development Server:**
-```bash
-npm run dev
-```
-* The UI will be available at `http://localhost:5173`. Simply select your desired role from the user dropdown in the top right to test the tiered approval workflow!
-
----
-*Built for Antigravity.*
+- **Responsive Design:** Completely mobile-first layouts, ensuring the complex comparison tables and dashboards look great on phones and desktops.
+- **Role-Based Views:** The UI adapts based on the role selected in the top right navbar.
+- **Compare Tool:** Select up to 4 machines and compare their specs side-by-side in a detailed table.
+- **Live Search & Filtering:** Filter the inventory instantly by text search, machine type, or approval status.
+- **Aesthetic UI:** Floating action bars, fade-in animations, custom color palettes, and glassmorphism effects.
