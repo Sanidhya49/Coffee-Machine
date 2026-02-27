@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -12,10 +13,13 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Caffeineer API")
 
-# Setup CORS for the React frontend
+# Setup CORS for the React frontend or production
+origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+origins = origins_env.split(",") if origins_env != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For development
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
