@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
 import AddMachine from './components/AddMachine';
 import EditReviewMachine from './components/EditReviewMachine';
 import ViewMachine from './components/ViewMachine';
 import CompareMachines from './components/CompareMachines';
-import { Coffee, UserCircle } from 'lucide-react';
+import Login from './components/Login';
+import { Coffee, UserCircle, LogOut } from 'lucide-react';
+import { AuthContext, AuthProvider } from './context/AuthContext';
+
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
 
 function MainLayout() {
-  const [role, setRole] = useState('Admin'); // 'Admin', 'L1', 'L2'
+  const { user, logout } = useContext(AuthContext);
+  const role = user?.role || 'Guest';
+
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
+  const isLoginPage = location.pathname === '/login';
+  const isAuthView = isLandingPage || isLoginPage;
 
   return (
     <div className="min-h-screen bg-coffee-50 flex flex-col font-sans overflow-hidden">
@@ -33,35 +46,39 @@ function MainLayout() {
               </div>
             </div>
 
-            {/* Role Switcher - Hidden on Professional Landing Page */}
-            {!isLandingPage && (
-              <div className="flex items-center space-x-2 bg-white border border-coffee-200 rounded-lg px-1.5 sm:px-2 shadow-sm">
-                <UserCircle size={20} className="text-coffee-500 hidden sm:block" />
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="bg-transparent text-coffee-900 text-xs sm:text-sm font-semibold rounded-lg focus:ring-0 focus:border-0 block p-1.5 sm:p-2 md:w-32 active:outline-none cursor-pointer outline-none border-none"
-                >
-                  <option value="Admin">Admin</option>
-                  <option value="L1">L1 Reviewer</option>
-                  <option value="L2">L2 Reviewer</option>
-                </select>
+            {/* Auth Actions - Hidden on Landing Page unless requested */}
+            {!isAuthView && user && (
+              <div className="flex items-center space-x-3 sm:space-x-5">
+                <div className="flex items-center space-x-2 bg-coffee-50 border border-coffee-200 rounded-lg px-2 shadow-sm py-1.5">
+                  <UserCircle size={18} className="text-coffee-500 hidden sm:block" />
+                  <span className="text-coffee-900 text-xs sm:text-sm font-bold pr-1">{user.role}</span>
+                </div>
+                <button onClick={logout} className="flex items-center space-x-1.5 text-coffee-600 hover:text-red-600 transition" title="Logout">
+                  <LogOut size={18} />
+                  <span className="text-sm font-bold hidden sm:inline">Logout</span>
+                </button>
               </div>
+            )}
+            {!user && !isLoginPage && !isLandingPage && (
+              <Link to="/login" className="bg-coffee-800 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-coffee-900 transition shadow-sm hover:shadow">
+                Sign In
+              </Link>
             )}
           </div>
         </div>
       </nav>
 
       {/* Main Content Area */}
-      <main className={`flex-1 w-full mx-auto ${isLandingPage ? 'flex flex-col' : 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8'}`}>
+      <main className={`flex-1 w-full mx-auto ${isAuthView ? 'flex flex-col' : 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8'}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/inventory" element={<Dashboard role={role} />} />
-          <Route path="/view/:id" element={<ViewMachine role={role} />} />
-          <Route path="/compare" element={<CompareMachines role={role} />} />
-          <Route path="/add" element={<AddMachine role={role} />} />
-          <Route path="/edit/:id" element={<EditReviewMachine role={role} mode="edit" />} />
-          <Route path="/review/:id" element={<EditReviewMachine role={role} mode="review" />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/inventory" element={<ProtectedRoute><Dashboard role={role} /></ProtectedRoute>} />
+          <Route path="/view/:id" element={<ProtectedRoute><ViewMachine role={role} /></ProtectedRoute>} />
+          <Route path="/compare" element={<ProtectedRoute><CompareMachines role={role} /></ProtectedRoute>} />
+          <Route path="/add" element={<ProtectedRoute><AddMachine role={role} /></ProtectedRoute>} />
+          <Route path="/edit/:id" element={<ProtectedRoute><EditReviewMachine role={role} mode="edit" /></ProtectedRoute>} />
+          <Route path="/review/:id" element={<ProtectedRoute><EditReviewMachine role={role} mode="review" /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
@@ -70,9 +87,11 @@ function MainLayout() {
 
 function App() {
   return (
-    <Router>
-      <MainLayout />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <MainLayout />
+      </Router>
+    </AuthProvider>
   );
 }
 

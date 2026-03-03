@@ -1,11 +1,13 @@
 import os
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
 import models
 import seed
+import auth
 from database import SessionLocal, engine, Base
 
 # Create tables
@@ -69,6 +71,20 @@ def get_db():
 def on_startup():
     seed.seed_db()
 
+@app.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    if not user or not auth.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = auth.create_access_token(
+        data={"sub": user.username, "role": user.role}
+    )
+    return {"access_token": access_token, "token_type": "bearer", "role": user.role, "username": user.username}
+
 @app.get("/machines", response_model=List[CoffeeMachineOut])
 def get_machines(db: Session = Depends(get_db)):
     """Get all coffee machines"""
@@ -83,7 +99,7 @@ def get_machine(machine_id: int, db: Session = Depends(get_db)):
     return machine
 
 @app.post("/machines", response_model=CoffeeMachineOut)
-def create_machine(machine: CoffeeMachineCreate, db: Session = Depends(get_db)):
+def create_machine(machine: CoffeeMachineCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     """Create a new coffee machine"""
     db_machine = models.CoffeeMachine(**machine.dict())
     db.add(db_machine)
@@ -92,7 +108,7 @@ def create_machine(machine: CoffeeMachineCreate, db: Session = Depends(get_db)):
     return db_machine
 
 @app.put("/machines/{machine_id}", response_model=CoffeeMachineOut)
-def update_machine(machine_id: int, machine_update: CoffeeMachineUpdate, db: Session = Depends(get_db)):
+def update_machine(machine_id: int, machine_update: CoffeeMachineUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     """Update a coffee machine, specifically for status updates handled by reviewers"""
     db_machine = db.query(models.CoffeeMachine).filter(models.CoffeeMachine.id == machine_id).first()
     if not db_machine:
@@ -119,7 +135,7 @@ def update_machine(machine_id: int, machine_update: CoffeeMachineUpdate, db: Ses
     return db_machine
 
 @app.delete("/machines/{machine_id}")
-def delete_machine(machine_id: int, db: Session = Depends(get_db)):
+def delete_machine(machine_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     """Delete a coffee machine"""
     db_machine = db.query(models.CoffeeMachine).filter(models.CoffeeMachine.id == machine_id).first()
     if not db_machine:

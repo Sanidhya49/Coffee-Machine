@@ -1,7 +1,8 @@
 import random
 from sqlalchemy.orm import Session
-from models import CoffeeMachine
+from models import CoffeeMachine, User
 from database import SessionLocal, engine, Base
+import auth
 
 BRANDS = ["DeLonghi", "Nespresso", "Breville", "Keurig", "Philips", "Jura", "Smeg", "Gaggia"]
 TYPES = ["Pour Over", "Espresso", "Drip", "Pod", "French Press", "AeroPress"]
@@ -50,6 +51,18 @@ def seed_db():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     
+    # Check if we already have users
+    existing_user = db.query(User).first()
+    if not existing_user:
+        print("Seeding default users...")
+        users = [
+            User(username="admin", hashed_password=auth.get_password_hash("admin123"), role="Admin"),
+            User(username="l1_user", hashed_password=auth.get_password_hash("l1pass"), role="L1"),
+            User(username="l2_user", hashed_password=auth.get_password_hash("l2pass"), role="L2"),
+        ]
+        db.add_all(users)
+        db.commit()
+
     # Check if we already have data
     existing = db.query(CoffeeMachine).first()
     if not existing:
