@@ -10,6 +10,16 @@ import seed
 import auth
 from database import SessionLocal, engine, Base
 
+import dotenv
+dotenv.load_dotenv()
+
+try:
+    from google import genai
+    gemini_client = genai.Client()
+except Exception as e:
+    gemini_client = None
+    print(f"Warning: Gemini Client could not be initialized. API Key missing? Error: {e}")
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -52,6 +62,18 @@ class CoffeeMachineUpdate(BaseModel):
     description: str | None = None
     image_url: str | None = None
 
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    role: str
+
+class MachineDetails(BaseModel):
+    machine_name: str
+    brand_name: str
+    machine_type: str
+    price: str
+
 class CoffeeMachineOut(CoffeeMachineBase):
     id: int
 
@@ -85,10 +107,56 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     )
     return {"access_token": access_token, "token_type": "bearer", "role": user.role, "username": user.username}
 
+@app.post("/register")
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    # Check if username or email exists
+    db_user = db.query(models.User).filter(
+        (models.User.username == user.username) | 
+        (models.User.email == user.email)
+    ).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username or email already registered")
+    
+    # Hash password and create user
+    hashed_password = auth.get_password_hash(user.password)
+    new_user = models.User(
+        username=user.username,
+        email=user.email,
+        hashed_password=hashed_password,
+        role=user.role
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    return {"message": "User registered successfully"}
+
 @app.get("/machines", response_model=List[CoffeeMachineOut])
 def get_machines(db: Session = Depends(get_db)):
     """Get all coffee machines"""
     return db.query(models.CoffeeMachine).all()
+
+@app.post("/generate-description")
+def generate_description(details: MachineDetails, db: Session = Depends(get_db)):
+    """Generate an AI description using Gemini"""
+    if not gemini_client:
+        raise HTTPException(status_code=500, detail="Gemini client is not configured on the server.")
+        
+    prompt = (
+        f"Write a short, engaging, and professional product description (max 3 sentences) for a coffee machine. "
+        f"Details: Name is '{details.machine_name}', Brand is '{details.brand_name}', "
+        f"Type is {details.machine_type}, and the price is ₹{details.price} (Rupees). Do not use markdown."
+    )
+    
+    try:
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        return {"description": response.text.strip()}
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate description: {str(e)}")
 
 @app.get("/machines/{machine_id}", response_model=CoffeeMachineOut)
 def get_machine(machine_id: int, db: Session = Depends(get_db)):

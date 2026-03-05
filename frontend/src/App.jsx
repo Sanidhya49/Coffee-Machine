@@ -7,6 +7,7 @@ import EditReviewMachine from './components/EditReviewMachine';
 import ViewMachine from './components/ViewMachine';
 import CompareMachines from './components/CompareMachines';
 import Login from './components/Login';
+import Register from './components/Register';
 import { Coffee, UserCircle, LogOut } from 'lucide-react';
 import { AuthContext, AuthProvider } from './context/AuthContext';
 
@@ -24,7 +25,8 @@ function MainLayout() {
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
   const isLoginPage = location.pathname === '/login';
-  const isAuthView = isLandingPage || isLoginPage;
+  const isRegisterPage = location.pathname === '/register';
+  const isAuthView = isLandingPage || isLoginPage || isRegisterPage;
 
   return (
     <div className="min-h-screen bg-coffee-50 flex flex-col font-sans overflow-hidden">
@@ -59,10 +61,15 @@ function MainLayout() {
                 </button>
               </div>
             )}
-            {!user && !isLoginPage && !isLandingPage && (
-              <Link to="/login" className="bg-coffee-800 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-coffee-900 transition shadow-sm hover:shadow">
-                Sign In
-              </Link>
+            {!user && !isAuthView && (
+              <div className="flex space-x-3">
+                <Link to="/login" className="text-coffee-800 font-bold hover:text-coffee-600 transition self-center text-sm mr-2">
+                  Log In
+                </Link>
+                <Link to="/register" className="bg-coffee-800 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-coffee-900 transition shadow-sm hover:shadow hidden sm:block">
+                  Sign Up
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -73,6 +80,7 @@ function MainLayout() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/inventory" element={<ProtectedRoute><Dashboard role={role} /></ProtectedRoute>} />
           <Route path="/view/:id" element={<ProtectedRoute><ViewMachine role={role} /></ProtectedRoute>} />
           <Route path="/compare" element={<ProtectedRoute><CompareMachines role={role} /></ProtectedRoute>} />

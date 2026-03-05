@@ -56,9 +56,9 @@ def seed_db():
     if not existing_user:
         print("Seeding default users...")
         users = [
-            User(username="admin", hashed_password=auth.get_password_hash("admin123"), role="Admin"),
-            User(username="l1_user", hashed_password=auth.get_password_hash("l1pass"), role="L1"),
-            User(username="l2_user", hashed_password=auth.get_password_hash("l2pass"), role="L2"),
+            User(username="admin", email="admin@coffee.io", hashed_password=auth.get_password_hash("admin123"), role="Admin"),
+            User(username="l1_user", email="l1@coffee.io", hashed_password=auth.get_password_hash("l1pass"), role="L1"),
+            User(username="l2_user", email="l2@coffee.io", hashed_password=auth.get_password_hash("l2pass"), role="L2"),
         ]
         db.add_all(users)
         db.commit()

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { PlusCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { PlusCircle, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
 
 function AddMachine({ role }) {
     const navigate = useNavigate();
@@ -16,6 +16,7 @@ function AddMachine({ role }) {
     });
     const [imagePreview, setImagePreview] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     // Only Admin can access this route, but we double check
     if (role !== 'Admin') {
@@ -48,6 +49,32 @@ function AddMachine({ role }) {
                 ...prev,
                 [name]: name === 'price' ? parseFloat(value) || '' : value
             }));
+        }
+    };
+
+    const handleGenerateDescription = async () => {
+        if (!formData.machine_name || !formData.brand_name || !formData.machine_type || !formData.price) {
+            alert("Please fill in Name, Brand, Type, and Price first to generate a description.");
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            const response = await api.post('/generate-description', {
+                machine_name: formData.machine_name,
+                brand_name: formData.brand_name,
+                machine_type: formData.machine_type,
+                price: formData.price.toString()
+            });
+            setFormData(prev => ({
+                ...prev,
+                description: response.data.description
+            }));
+        } catch (error) {
+            console.error("Error generating description:", error);
+            alert("Failed to auto-generate description. Ensure Gemini key is configured on the backend.");
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -148,7 +175,23 @@ function AddMachine({ role }) {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Description*</label>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Description*</label>
+                                        <button
+                                            type="button"
+                                            onClick={handleGenerateDescription}
+                                            disabled={isGenerating || !formData.machine_name || !formData.brand_name || !formData.machine_type || !formData.price}
+                                            className="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 hover:from-amber-200 hover:to-orange-200 border border-amber-200 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Needs Name, Brand, Type & Price filled out"
+                                        >
+                                            {isGenerating ? (
+                                                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin text-amber-600" />
+                                            ) : (
+                                                <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-600" />
+                                            )}
+                                            {isGenerating ? "Generating..." : "Magic Auto-Generate"}
+                                        </button>
+                                    </div>
                                     <textarea required name="description" value={formData.description} onChange={handleChange} rows="4" className="w-full rounded-xl border-none bg-coffee-50/50 px-4 py-3 focus:ring-4 focus:ring-coffee-500/20 focus:outline-none transition text-sm font-medium shadow-sm resize-none" placeholder="Short description of the machine..."></textarea>
                                 </div>
                             </div>

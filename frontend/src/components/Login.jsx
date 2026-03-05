@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Coffee, Lock, User, Loader2 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -104,11 +104,12 @@ function Login() {
                     </form>
 
                     <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-                        <p className="text-xs font-medium text-gray-400">Default Accounts</p>
-                        <div className="flex justify-center gap-4 mt-2 text-xs font-bold text-coffee-600">
-                            <span>admin / admin123</span>
-                            <span>l1_user / l1pass</span>
-                        </div>
+                        <p className="text-sm font-medium text-coffee-600">
+                            Don't have an account?{' '}
+                            <Link to="/register" className="font-bold text-coffee-900 hover:text-coffee-700 underline decoration-2 underline-offset-2">
+                                Sign Up
+                            </Link>
+                        </p>
                     </div>
                 </div>
             </div>
