@@ -17,6 +17,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 hours
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+
 # --- Dependency ---
 def get_db():
     db = SessionLocal()
