@@ -5,13 +5,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
+import dotenv
+dotenv.load_dotenv()
+
+# Run database migrations before SQLAlchemy loads models
+import migrate
+
+from database import SessionLocal, engine, Base
 import models
 import seed
 import auth
-from database import SessionLocal, engine, Base
-
-import dotenv
-dotenv.load_dotenv()
 
 try:
     from google import genai
